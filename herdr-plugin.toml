@@ -1,17 +1,30 @@
 id = "devicki.away-signal"
 name = "away-signal"
-version = "0.2.0"
+version = "0.3.0"
 min_herdr_version = "0.9.5"
 platforms = ["linux", "macos"]
 description = "Away mode: while you are away, POST to a webhook when an agent finishes or needs you, so an orchestrator never has to poll."
 
-# Writes the config template on first run.
+# Writes the config template on first run, and the sidebar mark (Herdr forgets it on restart).
 [[startup]]
 command = ["bash", "away-signal.sh", "init"]
 
 [[events]]
 on = "pane.agent_status_changed"
 command = ["bash", "away-signal.sh", "event"]
+
+# The sidebar mark stays on the first workspace as workspaces come, go and move.
+[[events]]
+on = "workspace.created"
+command = ["bash", "away-signal.sh", "mark"]
+
+[[events]]
+on = "workspace.closed"
+command = ["bash", "away-signal.sh", "mark"]
+
+[[events]]
+on = "workspace.reordered"
+command = ["bash", "away-signal.sh", "mark"]
 
 # Bind keys to these in config.toml (see the README): plugins cannot bind keys themselves.
 # On and off say what they mean, so a press never flips a machine whose flag fell out of step.

@@ -23,7 +23,7 @@ JSON POST를 받는 서비스라면 어디든 이 신호를 받을 수 있어요
 ## 설치
 
 ```sh
-herdr plugin install devicki/herdr-away-signal --ref v0.2.0 --yes
+herdr plugin install devicki/herdr-away-signal --ref v0.3.0 --yes
 ```
 
 `--ref`는 릴리스를 고정해요. 설정 파일 틀은 에이전트 상태가 처음 바뀌거나 키를 처음 누를 때, 또는 다음에 Herdr 서버가 시작될 때 만들어져요.
@@ -69,6 +69,20 @@ description = "자리 비움 끄기"
 ```
 
 떠날 때 누르는 키와 돌아와서 누르는 키가 따로예요. 같은 키를 또 눌러도 상태가 그대로라서, 플래그가 어긋난 머신이 반대로 뒤집히는 일이 없어요. 키 하나로 쓰고 싶다면 `devicki.away-signal.toggle`도 있어요. 두 키 모두 Herdr 0.9.5 기본 키와 겹치지 않아요. 내 설정에서 이미 쓰고 있다면 다른 키를 고르세요.
+
+## 사이드바 표시
+
+자리 비움이 켜져 있으면 머신마다 맨 위 작업 공간 한 줄에 `away` 토큰(🌙 away)이 붙어요. 머신당 한 줄이라 어느 머신이 자리 비움인지 한눈에 보여요. 토큰은 사이드바 줄에 넣어야 보여요. 아래는 Herdr 기본 작업 공간 줄에 토큰을 더한 것이에요. `~/.config/herdr/config.toml`에 넣으세요.
+
+```toml
+[ui.sidebar.spaces]
+rows = [
+  ["state_icon", "workspace", "$away"],
+  ["branch", "git_status"],
+]
+```
+
+이미 `rows`를 바꿔 쓰고 있다면 원하는 줄에 `"$away"`만 더하세요. 노트북에서 원격 머신에 붙어 쓴다면 사이드바는 노트북이 그리므로 노트북 설정에 넣어야 해요. SSH로 플래그를 바꾼 경우에는 다음에 에이전트 상태가 바뀔 때 표시가 따라와요.
 
 ## 플래그 파일
 

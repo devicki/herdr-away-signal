@@ -23,7 +23,7 @@ Each machine has its own away mode, and every signal names its machine, so a bot
 ## Install
 
 ```sh
-herdr plugin install devicki/herdr-away-signal --ref v0.2.0 --yes
+herdr plugin install devicki/herdr-away-signal --ref v0.3.0 --yes
 ```
 
 `--ref` pins a release. The config template is written on the first agent status change or key press, or when the Herdr server next starts.
@@ -69,6 +69,20 @@ description = "away: off"
 ```
 
 One key to leave and one to come back: pressing either again changes nothing, so a machine whose flag fell out of step is never flipped the wrong way. `devicki.away-signal.toggle` is there too if you prefer a single key. Both keys are free in Herdr 0.9.5's defaults; pick others if your own config already uses them.
+
+## Sidebar mark
+
+While away mode is on, the first workspace of each machine carries an `away` token (🌙 away): one row per machine, so you can see at a glance which machines are away. Tokens stay invisible until a sidebar row uses them; these are Herdr's default workspace rows with the token added to `~/.config/herdr/config.toml`:
+
+```toml
+[ui.sidebar.spaces]
+rows = [
+  ["state_icon", "workspace", "$away"],
+  ["branch", "git_status"],
+]
+```
+
+If you already customized `rows`, add `"$away"` to whichever row you like. When you attach to remote machines from a laptop, the laptop draws the sidebar, so this goes in the laptop's config. A flag changed over SSH shows at the next agent status change.
 
 ## The flag file
 

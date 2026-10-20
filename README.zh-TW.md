@@ -23,7 +23,7 @@
 ## 安裝
 
 ```sh
-herdr plugin install devicki/herdr-away-signal --ref v0.2.0 --yes
+herdr plugin install devicki/herdr-away-signal --ref v0.3.0 --yes
 ```
 
 `--ref` 用來鎖定發行版本。設定範本會在代理程式狀態第一次改變或第一次按下按鍵時，或在 Herdr 伺服器下次啟動時寫入。
@@ -69,6 +69,20 @@ description = "暫離模式關閉"
 ```
 
 離開時按的鍵和回來時按的鍵是分開的。同一個鍵再按一次，狀態也不會改變，所以旗標不同步的機器不會被反向切換。如果你偏好只用一個鍵，也可以使用 `devicki.away-signal.toggle`。在 Herdr 0.9.5 的預設設定中，這兩個鍵都沒有被占用；如果你自己的設定已經用了它們，請另選其他按鍵。
+
+## 側邊欄標示
+
+暫離模式開啟時，每台機器最上方的工作區那一列會帶上 `away` 標記（🌙 away）。每台機器只有一列，所以一眼就能看出哪些機器處於暫離。標記要放進側邊欄的列中才會顯示；以下是在 Herdr 預設工作區列加上標記的設定，請加到 `~/.config/herdr/config.toml`：
+
+```toml
+[ui.sidebar.spaces]
+rows = [
+  ["state_icon", "workspace", "$away"],
+  ["branch", "git_status"],
+]
+```
+
+如果你已經自訂過 `rows`，只要把 `"$away"` 加到想要的那一列即可。若你是從筆電連到遠端機器，側邊欄是由筆電繪製的，所以這段要放在筆電的設定裡。透過 SSH 變更旗標時，會在下一次代理程式狀態改變時跟著更新。
 
 ## 旗標檔案
 

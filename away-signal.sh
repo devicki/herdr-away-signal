@@ -5,7 +5,7 @@
 #   away-signal.sh toggle | on | off   set away mode, POST it, show it in Herdr
 #   away-signal.sh status              print on or off
 #
-# Internal: init (startup), event (plugin hook), confirm (delayed agent check).
+# Internal: init (startup), event (plugin hook), confirm (delayed agent check), mark (sidebar).
 # Away mode is one flag file, $statedir/away: present means away. An orchestrator that keeps
 # several machines in step creates or removes it directly, which sends nothing.
 set -uo pipefail
@@ -70,7 +70,30 @@ set_away() { # on|off
     body="The webhook did not take it; see $log"
   [ -n "$(conf_get url)" ] && [ "$(conf_get dry_run)" != true ] || body="Dry run: logged to $log"
   "$H" notification show "away-signal: away $1" ${body:+--body "$body"} >/dev/null 2>&1 || :
+  mark
   echo "away $1"
+}
+
+# The sidebar mark: an `away` token on this server's first workspace while away mode is on, so
+# one row per machine shows it. It is redrawn only when the flag or the first workspace changed
+# (a flag set over SSH shows at the next hook); Herdr forgets tokens on restart, so startup
+# forces it.
+mark() { # [force]
+  local list want f
+  f="$statedir/mark-$(printf %s "${HERDR_SOCKET_PATH:-}" | cksum | cut -d' ' -f1)"
+  list=$("$H" workspace list 2>/dev/null | jq -r '.result.workspaces[].workspace_id') || return 0
+  [ -n "$list" ] || return 0
+  want=off
+  [ ! -e "$flag" ] || want="on ${list%%$'\n'*}"
+  [ "${1:-}" = force ] || [ "$want" != "$(cat "$f" 2>/dev/null)" ] || return 0
+  while IFS= read -r w; do
+    if [ "$want" = "on $w" ]; then
+      "$H" workspace report-metadata "$w" --source devicki.away-signal --token "away=🌙 away"
+    else
+      "$H" workspace report-metadata "$w" --source devicki.away-signal --clear-token away
+    fi >/dev/null 2>&1
+  done <<<"$list"
+  mkdir -p "$statedir" && echo "$want" >"$f"
 }
 
 lock() { # name; a mkdir lock works the same on Linux and macOS
@@ -114,6 +137,7 @@ event() {
   fi
   printf '%s %s\n' "$status" "$gen" >"$statedir/panes/$key"
   unlock "$key"
+  mark
 }
 
 confirm() { # pane status gen
@@ -140,7 +164,8 @@ confirm() { # pane status gen
 }
 
 case "${1:-}" in
-(init) ;;
+(init) mark force ;;
+(mark) mark ;;
 (toggle) if [ -e "$flag" ]; then set_away off; else set_away on; fi ;;
 (on | off) set_away "$1" ;;
 (status) if [ -e "$flag" ]; then echo on; else echo off; fi ;;

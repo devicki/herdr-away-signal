@@ -116,5 +116,20 @@ h plugin action invoke off --plugin devicki.away-signal >/dev/null; sleep 1
 check "on and off actions, twice each: never flipped (on)" 3 '.body == {type: "away", on: true, machine: "box"}'
 check "  (off)" 3 '.body == {type: "away", on: false, machine: "box"}'
 
+# The sidebar mark: while away, one `away` token, on the first workspace; it follows when that
+# workspace closes, and goes when away mode is off.
+marks() { h workspace list | jq -r '[.result.workspaces[] | select(.tokens.away) | .workspace_id] | join(" ")'; }
+first() { h workspace list | jq -r '.result.workspaces[0].workspace_id'; }
+h workspace create --cwd /tmp --label second --no-focus >/dev/null
+h plugin action invoke on --plugin devicki.away-signal >/dev/null; sleep 1
+w1=$(first)
+[ "$(marks)" = "$w1" ] || { echo "FAIL away on: marked '$(marks)', want the first workspace $w1" >&2; fail=1; }
+h workspace close "$w1" >/dev/null 2>&1; sleep 1.5
+[ "$(marks)" = "$(first)" ] && [ "$(first)" != "$w1" ] ||
+  { echo "FAIL the mark did not move to the new first workspace: '$(marks)'" >&2; fail=1; }
+h plugin action invoke off --plugin devicki.away-signal >/dev/null; sleep 1
+[ -z "$(marks)" ] || { echo "FAIL away off left a mark on '$(marks)'" >&2; fail=1; }
+[ "$fail" -ne 0 ] || echo "ok   sidebar mark: first workspace only, follows it, cleared when off"
+
 [ "$fail" -eq 0 ] && echo PASS
 exit "$fail"
