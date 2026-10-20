@@ -2,6 +2,8 @@
 
 [English](README.md) | [한국어](README.ko.md) | 日本語 | [繁體中文](README.zh-TW.md)
 
+![away-signal: prefix+a でマシンを離席にすると、作業を終えたエージェントが Webhook ですぐボットに届きます](docs/away-signal.gif)
+
 席を外すときのための [Herdr](https://herdr.dev) プラグインです。キーひとつで離席モードをオン・オフします。オンの間は、エージェントがターンを終えたときや入力を待っているときに Webhook へ POST します。そのため、マシンを見守るオーケストレーターは Herdr をポーリングせずにシグナルを受け取れます。
 
 - **離席モード**: マシンごとにフラグファイルがひとつあります。キーでこのファイルをオン・オフし、新しい状態を Webhook へ POST し、Herdr にも表示します。

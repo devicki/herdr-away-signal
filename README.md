@@ -2,6 +2,8 @@
 
 English | [한국어](README.ko.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
+![away-signal: prefix+a marks a machine away, and a finished agent reaches the bot by webhook at once](docs/away-signal.gif)
+
 A [Herdr](https://herdr.dev) plugin for when you step away. A key turns away mode on or off. While it is on, the plugin POSTs to a webhook when an agent finishes a turn or waits for you, so an orchestrator watching your machines gets a signal instead of polling Herdr.
 
 - **Away mode** is one flag file per machine. A key turns it on or off, POSTs the new state to the webhook and shows it in Herdr.

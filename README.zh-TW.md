@@ -2,6 +2,8 @@
 
 [English](README.md) | [한국어](README.ko.md) | [日本語](README.ja.md) | 繁體中文
 
+![away-signal：按 prefix+a 將機器設為暫離，完成工作的代理程式會立即透過 webhook 通知機器人](docs/away-signal.gif)
+
 一個在你離開座位時使用的 [Herdr](https://herdr.dev) 外掛。按一個鍵就能開啟或關閉暫離模式。開啟期間，代理程式完成一輪工作或等待你回應時，外掛會向 webhook 送出 POST，讓監看你各台機器的協調器直接收到訊號，而不必輪詢 Herdr。
 
 - **暫離模式**：每台機器一個旗標檔案。用按鍵開啟或關閉它、將新狀態 POST 到 webhook，並在 Herdr 中顯示。
