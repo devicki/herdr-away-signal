@@ -22,6 +22,16 @@ Any service that takes a JSON POST can receive these signals, but the plugin was
 
 Each machine has its own away mode, and every signal names its machine, so a bot can look after each one separately: hand over the agents of a machine you left while you keep working on another. To keep several in step instead, the bot can create or remove [the flag file](#the-flag-file) over SSH.
 
+## Herdrbot
+
+[Herdrbot](https://x.ai/bot/_919WifLAy2hWk7R7juy-) is a ready-made Grok Bot that directs your Herdr agents over SSH, and the bot this plugin was first made for:
+
+1. **Add it** from [the link](https://x.ai/bot/_919WifLAy2hWk7R7juy-) in the Grok Bot app. A short setup chat follows, one question at a time.
+2. **Let it in.** Install Herdr under each account where your agents run. Herdrbot makes its own SSH key and shows you only the public half; add it to that account's `~/.ssh/authorized_keys`. It never asks for passwords or private keys.
+3. **It registers each account** as a Herdr machine with a short label (`herdr machine add`), then sets up a 30-minute watch and a morning summary.
+4. **Give it a job** in chat: what to build or fix, and which machine and repo. It starts an agent named `hb-...` (or reuses one you name), watches it and reports back. It never answers approval prompts for you, and merge, deploy, force-push and deletes always need your OK.
+5. **Optional: this plugin.** Ask Herdrbot to set up away signals; it creates a webhook routine named "Herdr signal". Copy that routine's webhook URL and key into `away-signal.conf` on each machine (`url`, `key`), set `machine` to the label Herdrbot uses for that account, and add [the key bindings](#key-binding). Without it, Herdrbot still works through its 30-minute watch.
+
 ## Install
 
 ```sh
