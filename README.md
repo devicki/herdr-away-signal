@@ -13,15 +13,10 @@ Needs Herdr 0.9.5 or newer, bash, curl and jq.
 ## Install
 
 ```sh
-git clone <this repository> ~/herdr-plugins/herdr-away-signal
-herdr plugin link ~/herdr-plugins/herdr-away-signal
+herdr plugin install devicki/herdr-away-signal --ref v0.1.0 --yes
 ```
 
-The config template is written the next time the Herdr server starts. To write it now:
-
-```sh
-bash ~/herdr-plugins/herdr-away-signal/away-signal.sh init
-```
+`--ref` pins a release. The config template is written on the first agent status change or key press, or when the Herdr server next starts.
 
 ## Settings
 
@@ -83,6 +78,7 @@ bash away-signal.sh status              # on or off
 ## Testing
 
 ```sh
+herdr plugin link .   # from a clone, instead of the install above
 ./test.sh
 ```
 
@@ -95,6 +91,8 @@ tail -f ~/.local/state/herdr/plugins/devicki.away-signal/away-signal.log
 ```
 
 Set `delay = 5` while trying it so you do not wait a minute.
+
+To release, bump `version` in `herdr-plugin.toml`, update the `--ref` in every README, commit, then `git tag -a vX.Y.Z -m vX.Y.Z && git push origin vX.Y.Z`.
 
 ## License
 

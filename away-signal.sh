@@ -22,6 +22,10 @@ conf="$confdir/away-signal.conf"
 flag="$statedir/away"
 log="$statedir/away-signal.log"
 
+# The commented template, private, whenever there is no config yet: startup writes it, and so
+# does the first hook or key press after an install, before any server restart.
+[ -e "$conf" ] || { mkdir -p "$confdir" && (umask 077 && cp "$here/away-signal.conf.example" "$conf"); } 2>/dev/null
+
 conf_get() { # key; ` #` starts a note
   [ -f "$conf" ] && sed -n "s/^[[:space:]]*$1[[:space:]]*=[[:space:]]*//p" "$conf" |
     sed -e 's/[[:space:]]#.*$//' -e 's/[[:space:]]*$//' | tail -n1
@@ -136,8 +140,7 @@ confirm() { # pane status gen
 }
 
 case "${1:-}" in
-(init)
-  [ -e "$conf" ] || { mkdir -p "$confdir" && (umask 077 && cp "$here/away-signal.conf.example" "$conf"); } ;;
+(init) ;;
 (toggle) if [ -e "$flag" ]; then set_away off; else set_away on; fi ;;
 (on | off) set_away "$1" ;;
 (status) if [ -e "$flag" ]; then echo on; else echo off; fi ;;

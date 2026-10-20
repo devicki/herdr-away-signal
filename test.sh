@@ -98,11 +98,11 @@ grep -q 'dry-run {"type":"away","on":true,"machine":"box"}' "$work/drystate/away
 [ "$("${env_[@]}" HERDR_PLUGIN_STATE_DIR="$work/drystate" bash "$here/away-signal.sh" status)" = on ] ||
   { echo "FAIL status does not read the flag" >&2; fail=1; }
 
-# A config file is written on first run, readable by its owner only.
+# A config file is written on first use, readable by its owner only.
 rm -rf "$work/fresh"
-"${env_[@]}" HERDR_PLUGIN_CONFIG_DIR="$work/fresh" HERDR_PLUGIN_STATE_DIR="$work/fresh-state" bash "$here/away-signal.sh" init
+"${env_[@]}" HERDR_PLUGIN_CONFIG_DIR="$work/fresh" HERDR_PLUGIN_STATE_DIR="$work/fresh-state" bash "$here/away-signal.sh" status >/dev/null
 case "$(stat -c %a "$work/fresh/away-signal.conf" 2>/dev/null || stat -f %Lp "$work/fresh/away-signal.conf")" in
-(600) echo "ok   init writes the config template, mode 600" ;;
+(600) echo "ok   first use writes the config template, mode 600" ;;
 (*) echo "FAIL init did not write a private config template" >&2; fail=1 ;;
 esac
 

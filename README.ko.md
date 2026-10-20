@@ -13,15 +13,10 @@ Herdr 0.9.5 이상, bash, curl, jq가 필요해요.
 ## 설치
 
 ```sh
-git clone <이 저장소> ~/herdr-plugins/herdr-away-signal
-herdr plugin link ~/herdr-plugins/herdr-away-signal
+herdr plugin install devicki/herdr-away-signal --ref v0.1.0 --yes
 ```
 
-설정 파일 틀은 다음에 Herdr 서버가 시작될 때 만들어져요. 바로 만들려면:
-
-```sh
-bash ~/herdr-plugins/herdr-away-signal/away-signal.sh init
-```
+`--ref`는 릴리스를 고정해요. 설정 파일 틀은 에이전트 상태가 처음 바뀌거나 키를 처음 누를 때, 또는 다음에 Herdr 서버가 시작될 때 만들어져요.
 
 ## 설정
 
@@ -83,6 +78,7 @@ bash away-signal.sh status              # on 또는 off
 ## 테스트
 
 ```sh
+herdr plugin link .   # 위 설치 대신, 저장소를 받은 폴더에서
 ./test.sh
 ```
 
@@ -95,6 +91,8 @@ tail -f ~/.local/state/herdr/plugins/devicki.away-signal/away-signal.log
 ```
 
 해 볼 때는 `delay = 5`로 두면 1분을 기다리지 않아도 돼요.
+
+릴리스할 때는 `herdr-plugin.toml`의 `version`을 올리고, 모든 README의 `--ref`를 바꿔 커밋한 뒤 `git tag -a vX.Y.Z -m vX.Y.Z && git push origin vX.Y.Z`를 실행하세요.
 
 ## 라이선스
 
