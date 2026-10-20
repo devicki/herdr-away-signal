@@ -94,6 +94,8 @@ herdr plugin link .   # 在複製下來的儲存庫中執行，取代上面的�
 
 它會啟動一個隔離的 Herdr（有自己的 HOME，只連結這個外掛）和一個在 localhost 上的替代 webhook，接著檢查切換動作、`pane.agent_status_changed` 鉤子、延遲與重複規則、請求標頭、dry run 以及設定範本。你自己的 Herdr 伺服器不會受到影響。
 
+也已用實際運作的機器人完整驗證過（Herdr 0.9.5，Linux）：暫離訊號、完成一輪工作的代理程式（`idle`），以及停在 Claude Code 資料夾信任確認畫面的代理程式（`blocked`）都順利送達，後兩者是在 60 秒重新確認之後才送出。
+
 還沒有 webhook 時手動測試：連結外掛、按下按鍵，然後在代理程式完成一輪工作時觀察記錄檔：
 
 ```sh

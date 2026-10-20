@@ -94,6 +94,8 @@ herdr plugin link .   # from a clone, instead of the install above
 
 It starts an isolated Herdr (its own HOME, only this plugin linked) and a stand-in webhook on localhost, then checks the toggle action, the `pane.agent_status_changed` hook, the delay and repeat rules, the request headers, dry run and the config template. Your own Herdr server is not touched.
 
+Checked end to end against a live bot on Herdr 0.9.5 (Linux): the away signal, a finished turn (`idle`) and an agent stopped at Claude Code's folder trust prompt (`blocked`) all arrived, the last two after the 60-second recheck.
+
 By hand, with no webhook yet: link the plugin, press the key, and watch the log while an agent finishes a turn:
 
 ```sh
