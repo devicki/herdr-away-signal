@@ -23,7 +23,7 @@ JSON の POST を受け取れるサービスなら、どれでもこのシグナ
 ## インストール
 
 ```sh
-herdr plugin install devicki/herdr-away-signal --ref v0.1.0 --yes
+herdr plugin install devicki/herdr-away-signal --ref v0.1.1 --yes
 ```
 
 `--ref` はリリースを固定します。設定ファイルのテンプレートは、エージェントの状態が最初に変わったときかキーを最初に押したとき、または次に Herdr サーバーが起動したときに書き出されます。

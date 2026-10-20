@@ -23,7 +23,7 @@ A bot that runs several machines can keep away mode in step on all of them by cr
 ## Install
 
 ```sh
-herdr plugin install devicki/herdr-away-signal --ref v0.1.0 --yes
+herdr plugin install devicki/herdr-away-signal --ref v0.1.1 --yes
 ```
 
 `--ref` pins a release. The config template is written on the first agent status change or key press, or when the Herdr server next starts.

@@ -23,7 +23,7 @@
 ## 安裝
 
 ```sh
-herdr plugin install devicki/herdr-away-signal --ref v0.1.0 --yes
+herdr plugin install devicki/herdr-away-signal --ref v0.1.1 --yes
 ```
 
 `--ref` 用來鎖定發行版本。設定範本會在代理程式狀態第一次改變或第一次按下按鍵時，或在 Herdr 伺服器下次啟動時寫入。

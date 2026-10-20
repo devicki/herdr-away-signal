@@ -1,6 +1,6 @@
 id = "devicki.away-signal"
 name = "away-signal"
-version = "0.1.0"
+version = "0.1.1"
 min_herdr_version = "0.9.5"
 platforms = ["linux", "macos"]
 description = "Away mode: while you are away, POST to a webhook when an agent finishes or needs you, so an orchestrator never has to poll."

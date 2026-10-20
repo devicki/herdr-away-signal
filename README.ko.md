@@ -23,7 +23,7 @@ JSON POST를 받는 서비스라면 어디든 이 신호를 받을 수 있어요
 ## 설치
 
 ```sh
-herdr plugin install devicki/herdr-away-signal --ref v0.1.0 --yes
+herdr plugin install devicki/herdr-away-signal --ref v0.1.1 --yes
 ```
 
 `--ref`는 릴리스를 고정해요. 설정 파일 틀은 에이전트 상태가 처음 바뀌거나 키를 처음 누를 때, 또는 다음에 Herdr 서버가 시작될 때 만들어져요.
