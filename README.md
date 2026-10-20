@@ -1,6 +1,6 @@
 # away-signal
 
-English | [한국어](README.ko.md)
+English | [한국어](README.ko.md) | [日本語](README.ja.md) | [繁體中文](README.zh-TW.md)
 
 A [Herdr](https://herdr.dev) plugin for when you step away. A key turns away mode on or off. While it is on, the plugin POSTs to a webhook when an agent finishes a turn or waits for you, so an orchestrator watching your machines gets a signal instead of polling Herdr.
 
@@ -9,6 +9,16 @@ A [Herdr](https://herdr.dev) plugin for when you step away. A key turns away mod
 - **Dry run**: without a webhook URL (or with `dry_run = true`) nothing is sent; every signal is written to a log instead.
 
 Needs Herdr 0.9.5 or newer, bash, curl and jq.
+
+## Made for bots
+
+Any service that takes a JSON POST can receive these signals, but the plugin was made for one job: giving bots an away signal. Chat bots and agent orchestrators, such as Grok Bot or dots, that look after your Herdr machines for you need to know two things: whether you are at the keyboard, and when an agent is done or stuck. With away-signal they get both pushed to them, instead of polling Herdr over SSH:
+
+1. You press the key as you leave. The bot learns you are away (`{"type":"away","on":true}`) and can take over: pass questions on to your phone, or carry on the work.
+2. While you are away, each finished or waiting agent arrives as one signal, with the pane, the agent, its title and its folder, so the bot knows where to look.
+3. You press the key again when you are back, and the bot steps aside.
+
+A bot that runs several machines can keep away mode in step on all of them by creating or removing [the flag file](#the-flag-file) over SSH.
 
 ## Install
 

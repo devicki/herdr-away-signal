@@ -1,0 +1,109 @@
+# away-signal
+
+[English](README.md) | [한국어](README.ko.md) | 日本語 | [繁體中文](README.zh-TW.md)
+
+席を外すときのための [Herdr](https://herdr.dev) プラグインです。キーひとつで離席モードをオン・オフします。オンの間は、エージェントがターンを終えたときや入力を待っているときに Webhook へ POST します。そのため、マシンを見守るオーケストレーターは Herdr をポーリングせずにシグナルを受け取れます。
+
+- **離席モード**: マシンごとにフラグファイルがひとつあります。キーを押すとこのファイルを切り替え、新しい状態を Webhook へ POST し、Herdr にも表示します。
+- **エージェントのシグナル**: 離席モードがオンの間だけ送ります。エージェントが入力を待っているとき（`blocked`）、またはターンを終えたとき（`working` の後に `done` か `idle`）です。その状態が 60 秒続く必要があり、送る直前に Herdr から状態を読み直します。そのため、ターン途中の一時停止が通知されることはありません。同じペインの同じ状態は 10 分以内に再送しません。
+- **ドライラン**: Webhook の URL がない場合（または `dry_run = true` の場合）は何も送らず、すべてのシグナルをログに書き込みます。
+
+Herdr 0.9.5 以降、bash、curl、jq が必要です。
+
+## ボットのためのプラグイン
+
+JSON の POST を受け取れるサービスなら、どれでもこのシグナルを受け取れます。ただ、このプラグインはひとつの目的のために作りました。ボットに離席シグナルを渡すことです。Grok Bot や dots のように、Herdr マシンを代わりに見守るチャットボットやエージェントオーケストレーターは、2 つのことを知る必要があります。あなたがキーボードの前にいるかどうか、そしてエージェントがいつ作業を終えたか、または行き詰まったかです。away-signal を使えば、SSH で Herdr をポーリングしなくても、この 2 つがボットに届きます。
+
+1. 席を立つときにキーを押します。ボットはあなたが離席したことを知り（`{"type":"away","on":true}`）、引き継げます。質問をスマートフォンへ転送したり、作業を続けたりできます。
+2. 離席中は、ターンを終えたエージェントや入力を待つエージェントが、それぞれひとつのシグナルとして届きます。ペイン、エージェント、タイトル、フォルダーが含まれるので、ボットはどこを見ればよいかわかります。
+3. 戻ったらもう一度キーを押します。ボットは手を引きます。
+
+複数のマシンを担当するボットは、SSH で[フラグファイル](#フラグファイル)を作成・削除することで、すべてのマシンの離席モードをそろえられます。
+
+## インストール
+
+```sh
+herdr plugin install devicki/herdr-away-signal --ref v0.1.0 --yes
+```
+
+`--ref` はリリースを固定します。設定ファイルのテンプレートは、エージェントの状態が最初に変わったときかキーを最初に押したとき、または次に Herdr サーバーが起動したときに書き出されます。
+
+## 設定
+
+プラグインの設定ディレクトリ（`herdr plugin config-dir devicki.away-signal`、通常は `~/.config/herdr/plugins/config/devicki.away-signal/`）にある `away-signal.conf` です。秘密の値を含むファイルなので、本人だけが読めるように作成されます。すべての設定は [`away-signal.conf.example`](away-signal.conf.example) にあります。
+
+| キー | デフォルト | |
+|---|---|---|
+| `url` | なし | Webhook。ない場合はすべてのシグナルがドライラン |
+| `key` | なし | `Authorization: Bearer <key>` として送信 |
+| `dry_run` | `false` | `true` なら送信せずにログに記録 |
+| `machine` | 短いホスト名 | すべてのシグナルでこのマシンを示す名前 |
+| `delay` | `60` | 送信前に状態が続く必要がある秒数 |
+| `repeat` | `600` | 同じペインの同じ状態を再送するまでの秒数 |
+
+リクエストはすべて `Content-Type: application/json` の POST です。
+
+```json
+{"type":"away","on":true,"machine":"laptop"}
+{"type":"agent","machine":"laptop","pane_id":"w1:p2","agent":"claude","status":"blocked","title":"fix the login test","cwd":"/home/me/shop"}
+```
+
+`status` は `blocked`、`done`（見ていない間に終わったターン）、`idle`（見ている間に終わったターン）のいずれかです。`title` はペインのターミナルタイトルです。
+
+## キーバインド
+
+プラグインはキーを割り当てられないので、`~/.config/herdr/config.toml` に次を追加して `herdr server reload-config` を実行してください。
+
+```toml
+[[keys.command]]
+key = "prefix+a"
+type = "plugin_action"
+command = "devicki.away-signal.toggle"
+description = "離席モード オン/オフ"
+```
+
+`prefix+a` は Herdr 0.9.5 のデフォルトでは使われていません。自分の設定ですでに使っている場合は、別のキーを選んでください。
+
+## フラグファイル
+
+このファイルが存在する間、離席モードはオンです。
+
+```
+~/.local/state/herdr/plugins/devicki.away-signal/away
+```
+
+マシンとアカウントごとに別々にあります。複数をそろえるには、SSH などでファイルを直接作成・削除してください（`touch <パス>` または `rm -f <パス>`）。どのシェル（fish も含む）でも使え、このときは何も送信しません。プラグインは状態が変わるたびに、そして送信する直前にもう一度フラグを読みます。
+
+シェルからは次のように使います。
+
+```sh
+bash away-signal.sh on | off | toggle   # キーと同じ: フラグ、Webhook、Herdr の通知
+bash away-signal.sh status              # on または off
+```
+
+## ログ
+
+`~/.local/state/herdr/plugins/devicki.away-signal/away-signal.log` には、すべてのシグナルが `sent`、`FAILED`、`dry-run` の印付きで残ります。失敗したときは curl のエラーも残ります。キーが書き込まれることはありません。最後の 500〜1,000 行を保持します。
+
+## テスト
+
+```sh
+herdr plugin link .   # 上記のインストールの代わりに、クローンしたフォルダーから
+./test.sh
+```
+
+隔離された Herdr（専用の HOME、このプラグインだけをリンク）と localhost の代わりの Webhook を起動し、トグルアクション、`pane.agent_status_changed` フック、遅延と再送のルール、リクエストヘッダー、ドライラン、設定ファイルのテンプレートを確認します。普段使っている Herdr サーバーには影響しません。
+
+Webhook がまだないときに手動で確認するには、プラグインをリンクしてキーを押し、エージェントがターンを終える間ログを見てください。
+
+```sh
+tail -f ~/.local/state/herdr/plugins/devicki.away-signal/away-signal.log
+```
+
+試すときは `delay = 5` にしておくと、1 分待たずに済みます。
+
+リリースするには、`herdr-plugin.toml` の `version` を上げ、すべての README の `--ref` を更新してコミットし、`git tag -a vX.Y.Z -m vX.Y.Z && git push origin vX.Y.Z` を実行します。
+
+## ライセンス
+
+MIT
