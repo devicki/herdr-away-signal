@@ -106,5 +106,15 @@ case "$(stat -c %a "$work/fresh/away-signal.conf" 2>/dev/null || stat -f %Lp "$w
 (*) echo "FAIL init did not write a private config template" >&2; fail=1 ;;
 esac
 
+# On and off set the state whatever it was: pressing either twice leaves it the same.
+h plugin action invoke on --plugin devicki.away-signal >/dev/null
+h plugin action invoke on --plugin devicki.away-signal >/dev/null; sleep 1
+[ -e "$state/away" ] || { echo "FAIL the on action did not write $state/away" >&2; fail=1; }
+h plugin action invoke off --plugin devicki.away-signal >/dev/null
+h plugin action invoke off --plugin devicki.away-signal >/dev/null; sleep 1
+[ ! -e "$state/away" ] || { echo "FAIL the off action left $state/away" >&2; fail=1; }
+check "on and off actions, twice each: never flipped (on)" 3 '.body == {type: "away", on: true, machine: "box"}'
+check "  (off)" 3 '.body == {type: "away", on: false, machine: "box"}'
+
 [ "$fail" -eq 0 ] && echo PASS
 exit "$fail"

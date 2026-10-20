@@ -1,6 +1,6 @@
 id = "devicki.away-signal"
 name = "away-signal"
-version = "0.1.1"
+version = "0.2.0"
 min_herdr_version = "0.9.5"
 platforms = ["linux", "macos"]
 description = "Away mode: while you are away, POST to a webhook when an agent finishes or needs you, so an orchestrator never has to poll."
@@ -13,7 +13,18 @@ command = ["bash", "away-signal.sh", "init"]
 on = "pane.agent_status_changed"
 command = ["bash", "away-signal.sh", "event"]
 
-# Bind a key to it in config.toml (see the README): plugins cannot bind keys themselves.
+# Bind keys to these in config.toml (see the README): plugins cannot bind keys themselves.
+# On and off say what they mean, so a press never flips a machine whose flag fell out of step.
+[[actions]]
+id = "on"
+title = "away-signal: away on (leaving)"
+command = ["bash", "away-signal.sh", "on"]
+
+[[actions]]
+id = "off"
+title = "away-signal: away off (back)"
+command = ["bash", "away-signal.sh", "off"]
+
 [[actions]]
 id = "toggle"
 title = "away-signal: toggle away mode"

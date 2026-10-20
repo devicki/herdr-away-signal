@@ -4,7 +4,7 @@
 
 一個在你離開座位時使用的 [Herdr](https://herdr.dev) 外掛。按一個鍵就能開啟或關閉暫離模式。開啟期間，代理程式完成一輪工作或等待你回應時，外掛會向 webhook 送出 POST，讓監看你各台機器的協調器直接收到訊號，而不必輪詢 Herdr。
 
-- **暫離模式**：每台機器一個旗標檔案。按鍵會切換它、將新狀態 POST 到 webhook，並在 Herdr 中顯示。
+- **暫離模式**：每台機器一個旗標檔案。用按鍵開啟或關閉它、將新狀態 POST 到 webhook，並在 Herdr 中顯示。
 - **代理程式訊號**：只在暫離模式開啟時送出，也就是代理程式在等你回應時（`blocked`），或完成一輪工作時（先 `working`，接著 `done` 或 `idle`）。該狀態必須維持 60 秒，送出前還會再向 Herdr 讀取一次，所以工作途中的短暫停頓絕不會被回報。同一個窗格的同一個狀態，10 分鐘內不會重複送出。
 - **dry run**：沒有 webhook URL（或設定 `dry_run = true`）時不會送出任何東西，所有訊號改為寫入記錄檔。
 
@@ -14,16 +14,16 @@
 
 任何能接收 JSON POST 的服務都能收到這些訊號，但這個外掛是為了一件事而做的：給機器人一個暫離訊號。像 Grok Bot 或 dots 這類替你照看 Herdr 機器的聊天機器人與代理程式協調器，需要知道兩件事：你是否在電腦前，以及代理程式何時完成或卡住。有了 away-signal，這兩件事會直接推送給它們，不必透過 SSH 輪詢 Herdr：
 
-1. 離開時按下按鍵，機器人就會知道你暫離了（`{"type":"away","on":true}`），並可以接手：把問題轉到你的手機，或繼續進行工作。
+1. 離開時按下開啟鍵，機器人就會知道你暫離了（`{"type":"away","on":true}`），並可以接手：把問題轉到你的手機，或繼續進行工作。
 2. 你暫離期間，每個完成或在等待的代理程式都會以一則訊號送達，附上窗格、代理程式、標題和資料夾，讓機器人知道該看哪裡。
-3. 回來時再按一次按鍵，機器人就會退到一旁。
+3. 回來時按下關閉鍵，機器人就會退到一旁。
 
-管理多台機器的機器人，可以透過 SSH 建立或刪除[旗標檔案](#旗標檔案)，讓所有機器的暫離模式保持一致。
+每台機器都有自己的暫離模式，每則訊號也都會標明來自哪台機器，所以機器人可以分別照看每一台：例如你離開的那台機器上的代理程式交給機器人，你在另一台機器上繼續工作。如果想讓多台機器保持一致，機器人可以透過 SSH 建立或刪除[旗標檔案](#旗標檔案)。
 
 ## 安裝
 
 ```sh
-herdr plugin install devicki/herdr-away-signal --ref v0.1.1 --yes
+herdr plugin install devicki/herdr-away-signal --ref v0.2.0 --yes
 ```
 
 `--ref` 用來鎖定發行版本。設定範本會在代理程式狀態第一次改變或第一次按下按鍵時，或在 Herdr 伺服器下次啟動時寫入。
@@ -58,11 +58,17 @@ herdr plugin install devicki/herdr-away-signal --ref v0.1.1 --yes
 [[keys.command]]
 key = "prefix+a"
 type = "plugin_action"
-command = "devicki.away-signal.toggle"
-description = "暫離模式開啟/關閉"
+command = "devicki.away-signal.on"
+description = "暫離模式開啟"
+
+[[keys.command]]
+key = "prefix+shift+a"
+type = "plugin_action"
+command = "devicki.away-signal.off"
+description = "暫離模式關閉"
 ```
 
-在 Herdr 0.9.5 的預設設定中，`prefix+a` 沒有被占用；如果你自己的設定已經用了它，請另選一個按鍵。
+離開時按的鍵和回來時按的鍵是分開的。同一個鍵再按一次，狀態也不會改變，所以旗標不同步的機器不會被反向切換。如果你偏好只用一個鍵，也可以使用 `devicki.away-signal.toggle`。在 Herdr 0.9.5 的預設設定中，這兩個鍵都沒有被占用；如果你自己的設定已經用了它們，請另選其他按鍵。
 
 ## 旗標檔案
 
