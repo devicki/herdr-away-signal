@@ -1,19 +1,24 @@
-# away-signal settings: one `key = value` per line. Lines starting with # are ignored, and ` #`
-# after a value starts a note. This file holds a secret: keep it readable by you only.
+# away-signal settings: one `key = value` per line. A line starting with # is a comment, and
+# ` #` after a value starts a note. This file holds a secret: keep it readable by you only.
 #
-# The webhook every signal is POSTed to, with `Authorization: Bearer <key>`. Without a url
-# nothing is sent: each signal is only written to the log (dry run).
+# Lines below without # are active and show the default; change the value to change it.
+# Lines with # are off until you remove the #.
+
+# The webhook every signal is POSTed to, with `Authorization: Bearer <key>`.
+# Off (no url): nothing is sent; each signal is only written to the log (dry run).
 # url = https://orchestrator.example/hooks/herdr
 # key = replace-me
-#
-# Log signals without sending them, even with a url set.
-# dry_run = true
-#
-# How this machine names itself in every signal. Default: the short host name.
+
+# true: log signals without sending them, even with a url set.
+dry_run = false
+
+# How this machine names itself in every signal.
+# Off: the short host name. Set it when two accounts share one machine.
 # machine = laptop
-#
-# Seconds an agent must stay finished or waiting before it is signalled.
-# delay = 60
-#
+
+# Seconds an agent must stay finished or waiting before it is signalled. If its status changes
+# meanwhile (you answered it), nothing is sent.
+delay = 60
+
 # Seconds before the same pane and status is signalled again.
-# repeat = 600
+repeat = 600
