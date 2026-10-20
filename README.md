@@ -35,7 +35,7 @@ Each machine has its own away mode, and every signal names its machine, so a bot
 ## Install
 
 ```sh
-herdr plugin install devicki/herdr-away-signal --ref v0.3.0 --yes
+herdr plugin install devicki/herdr-away-signal --ref v0.4.0 --yes
 ```
 
 `--ref` pins a release. The config template is written on the first agent status change or key press, or when the Herdr server next starts.
@@ -50,6 +50,7 @@ herdr plugin install devicki/herdr-away-signal --ref v0.3.0 --yes
 | `key` | none | sent as `Authorization: Bearer <key>` |
 | `dry_run` | `false` | `true` logs signals without sending them |
 | `machine` | short host name | how this machine names itself in every signal |
+| `sleep_hours` | none | e.g. `23:00-07:00`: away mode turns on by itself while you sleep ([below](#sleep-hours)) |
 | `delay` | `60` | seconds a status must hold before it is sent |
 | `repeat` | `600` | seconds before the same pane and status is sent again |
 
@@ -81,6 +82,14 @@ description = "away: off"
 ```
 
 One key to leave and one to come back: pressing either again changes nothing, so a machine whose flag fell out of step is never flipped the wrong way. `devicki.away-signal.toggle` is there too if you prefer a single key. Both keys are free in Herdr 0.9.5's defaults; pick others if your own config already uses them.
+
+## Sleep hours
+
+```
+sleep_hours = 23:00-07:00
+```
+
+Away mode turns on by itself when sleep hours start, and the bot gets the usual away signal. When they end it turns off again, but only if sleep hours turned it on: away mode you set by hand before bed stays on. A key press in between wins until the next start or end, so turning it off to work late keeps it off tonight. The time is this machine's local time and may span midnight; each machine has its own. The plugin checks on every agent status change and keeps one small sleeper process timed for the next start or end; after you edit the range it takes effect within 15 minutes.
 
 ## Sidebar mark
 

@@ -16,6 +16,11 @@ dry_run = false
 # Off: the short host name. Set it when two accounts share one machine.
 # machine = laptop
 
+# Sleep hours, local time (may span midnight): away mode turns on when they start and, if they
+# turned it on, off when they end. A key press in between wins until the next start or end.
+# Off: no schedule.
+# sleep_hours = 23:00-07:00
+
 # Seconds an agent must stay finished or waiting before it is signalled. If its status changes
 # meanwhile (you answered it), nothing is sent.
 delay = 60

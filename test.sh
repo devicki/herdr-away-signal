@@ -131,5 +131,22 @@ h plugin action invoke off --plugin devicki.away-signal >/dev/null; sleep 1
 [ -z "$(marks)" ] || { echo "FAIL away off left a mark on '$(marks)'" >&2; fail=1; }
 [ "$fail" -ne 0 ] || echo "ok   sidebar mark: first workspace only, follows it, cleared when off"
 
+# Sleep hours: on at their start, off at their end if they turned it on; a key press wins.
+mkdir -p "$work/sleep"
+win() { python3 -c 'import datetime as d, sys; n = d.datetime.now(); f = lambda m: (n + d.timedelta(minutes=int(m))).strftime("%H:%M"); print(f(sys.argv[1]) + "-" + f(sys.argv[2]))' "$@"; }
+sconf() { printf 'url = http://127.0.0.1:%s/hook\nmachine = sleepy\nsleep_hours = %s\n' "$port" "$1" >"$work/sleep/away-signal.conf"; }
+sl() { "${env_[@]}" HERDR_PLUGIN_CONFIG_DIR="$work/sleep" HERDR_PLUGIN_STATE_DIR="$work/sleepstate" bash "$here/away-signal.sh" "$@"; }
+sconf "$(win -1 2)"; sl tick; sl tick; sleep 0.5
+check "sleep hours start: away on, once" 1 '.body == {type: "away", on: true, machine: "sleepy"}'
+[ -e "$work/sleepstate/away" ] || { echo "FAIL sleep hours did not write the flag" >&2; fail=1; }
+sconf "$(win -3 -1)"; sl tick; sleep 0.5
+check "sleep hours end: away off, as they turned it on" 1 '.body == {type: "away", on: false, machine: "sleepy"}'
+sconf "$(win -2 3)"; sl tick; sl off >/dev/null; sl tick; sleep 0.5
+[ ! -e "$work/sleepstate/away" ] || { echo "FAIL a key press during sleep hours was undone" >&2; fail=1; }
+sl on >/dev/null; sconf "$(win -4 -1)"; sl tick; sleep 0.5
+[ -e "$work/sleepstate/away" ] || { echo "FAIL the end of sleep hours turned off an away set by hand" >&2; fail=1; }
+check "  a key press wins until the next start or end" 3 '.body == {type: "away", on: true, machine: "sleepy"}'
+[ ! -s "$work/sleepstate/sleeper.pid" ] || kill "$(cat "$work/sleepstate/sleeper.pid")" 2>/dev/null
+
 [ "$fail" -eq 0 ] && echo PASS
 exit "$fail"

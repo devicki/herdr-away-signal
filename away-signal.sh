@@ -5,7 +5,8 @@
 #   away-signal.sh toggle | on | off   set away mode, POST it, show it in Herdr
 #   away-signal.sh status              print on or off
 #
-# Internal: init (startup), event (plugin hook), confirm (delayed agent check), mark (sidebar).
+# Internal: init (startup), event (plugin hook), confirm (delayed agent check), mark (sidebar),
+# tick and sleeper (sleep hours).
 # Away mode is one flag file, $statedir/away: present means away. An orchestrator that keeps
 # several machines in step creates or removes it directly, which sends nothing.
 set -uo pipefail
@@ -62,10 +63,12 @@ post() {
 
 machine() { local m; m=$(conf_get machine); echo "${m:-$(hostname -s 2>/dev/null || uname -n)}"; }
 
-set_away() { # on|off
+set_away() { # on|off [auto]; auto: set by sleep hours, which may then turn it off again
   local on=false body=""
   mkdir -p "$statedir"
   if [ "$1" = on ]; then on=true; : >"$flag"; else rm -f "$flag"; fi
+  if [ "${2:-}" = auto ] && [ "$1" = on ]; then : >"$statedir/away.auto"; else rm -f "$statedir/away.auto"; fi
+  [ "${2:-}" != auto ] || body="Sleep hours $(conf_get sleep_hours)"
   post "$(jq -cn --argjson on "$on" --arg m "$(machine)" '{type: "away", on: $on, machine: $m}')" ||
     body="The webhook did not take it; see $log"
   [ -n "$(conf_get url)" ] && [ "$(conf_get dry_run)" != true ] || body="Dry run: logged to $log"
@@ -94,6 +97,40 @@ mark() { # [force]
     fi >/dev/null 2>&1
   done <<<"$list"
   mkdir -p "$statedir" && echo "$want" >"$f"
+}
+
+# Sleep hours (sleep_hours = HH:MM-HH:MM, local time, may span midnight): away mode turns on
+# when they start and, if they turned it on, off when they end. A key press in between wins
+# until the next start or end. Every hook checks, and one detached sleeper wakes for the next
+# start or end (at least every 15 minutes, so an edited range takes effect soon).
+tick() {
+  local r st since next id
+  r=$(conf_get sleep_hours | tr -d '[:space:]')
+  read -r st since next <<<"$(awk -v r="$r" -v t="$(date +%H:%M:%S)" '
+    function sec(x, a) { split(x, a, ":"); return a[1] * 3600 + a[2] * 60 + a[3] }
+    BEGIN {
+      if (r !~ /^[0-9]?[0-9]:[0-9][0-9]-[0-9]?[0-9]:[0-9][0-9]$/) exit
+      split(r, p, "-"); s = sec(p[1]); e = sec(p[2]); n = sec(t)
+      if (s == e) exit
+      if ((s < e && n >= s && n < e) || (s > e && (n >= s || n < e)))
+        print "on", (n - s + 86400) % 86400, (e - n + 86400) % 86400
+      else print "off", (n - e + 86400) % 86400, (s - n + 86400) % 86400
+    }')"
+  [ -n "$st" ] || return 0
+  # The start or end we are past, by its minute: each one is acted on once.
+  id="$st $((($(date +%s) - since) / 60))"
+  lock schedule
+  if [ "$id" != "$(cat "$statedir/schedule" 2>/dev/null)" ]; then
+    echo "$id" >"$statedir/schedule"
+    if [ "$st" = on ] && [ ! -e "$flag" ]; then set_away on auto >/dev/null
+    elif [ "$st" = off ] && [ -e "$statedir/away.auto" ]; then set_away off auto >/dev/null
+    fi
+  fi
+  unlock schedule
+  local pid
+  pid=$(cat "$statedir/sleeper.pid" 2>/dev/null)
+  [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null ||
+    nohup bash "$self" sleeper "$((next + 5 < 900 ? next + 5 : 900))" </dev/null >/dev/null 2>&1 &
 }
 
 lock() { # name; a mkdir lock works the same on Linux and macOS
@@ -137,6 +174,7 @@ event() {
   fi
   printf '%s %s\n' "$status" "$gen" >"$statedir/panes/$key"
   unlock "$key"
+  tick
   mark
 }
 
@@ -164,7 +202,9 @@ confirm() { # pane status gen
 }
 
 case "${1:-}" in
-(init) mark force ;;
+(init) tick; mark force ;;
+(tick) tick ;;
+(sleeper) echo $$ >"$statedir/sleeper.pid"; sleep "$2"; rm -f "$statedir/sleeper.pid"; tick ;;
 (mark) mark ;;
 (toggle) if [ -e "$flag" ]; then set_away off; else set_away on; fi ;;
 (on | off) set_away "$1" ;;
